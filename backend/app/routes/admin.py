@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
+from app.core.security import require_admin
 from app.models.admin import AdminCRUD
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -41,12 +42,16 @@ def get_admin_by_id(settings_id: int) -> dict[str, Any]:
 
 
 @router.post("")
-def create_admin(data: AdminCreate) -> dict[str, Any]:
+def create_admin(data: AdminCreate, _admin: dict[str, Any] = Depends(require_admin)) -> dict[str, Any]:
     return AdminCRUD.create(data.model_dump())
 
 
 @router.patch("/{settings_id}")
-def update_admin(settings_id: int, data: AdminIn) -> dict[str, Any]:
+def update_admin(
+    settings_id: int,
+    data: AdminIn,
+    _admin: dict[str, Any] = Depends(require_admin),
+) -> dict[str, Any]:
     row = AdminCRUD.update(settings_id, data.model_dump(exclude_unset=True))
     if row is None:
         raise HTTPException(status_code=404, detail="настройки не найдены")
@@ -54,7 +59,7 @@ def update_admin(settings_id: int, data: AdminIn) -> dict[str, Any]:
 
 
 @router.delete("/{settings_id}")
-def delete_admin(settings_id: int) -> dict[str, bool]:
+def delete_admin(settings_id: int, _admin: dict[str, Any] = Depends(require_admin)) -> dict[str, bool]:
     if not AdminCRUD.delete(settings_id):
         raise HTTPException(status_code=404, detail="настройки не найдены")
     return {"ok": True}

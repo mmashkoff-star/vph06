@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Deluxe Auto — вход в настройки</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/style.css?v=email4">
+</head>
+<body class="admin-page">
+  <div class="stage" aria-hidden="true">
+    <div class="sky"></div>
+    <div class="photo-gt"></div>
+    <div class="vignette"></div>
+  </div>
+  <header>
+    <div class="brand">Deluxe Auto<span>Settings</span></div>
+    <p class="meta"><a href="/">На форму записи</a></p>
+  </header>
+  <main class="admin login-main">
+    <section class="hero">
+      <p class="eyebrow">Административная панель</p>
+      <h1>Вход</h1>
+      <p class="lede">Доступ по логину и паролю. После входа браузер хранит JWT-токен до закрытия вкладки.</p>
+    </section>
+    <form class="admin-card login-card" id="auth-form">
+      <label>Логин
+        <input id="login" name="login" autocomplete="username" required minlength="3" maxlength="64" placeholder="admin">
+      </label>
+      <div id="email-wrap" hidden>
+        <label>E-mail
+          <input id="email" name="email" type="email" autocomplete="email" maxlength="254" placeholder="admin@deluxe-auto.ru">
+        </label>
+      </div>
+      <label>Пароль
+        <input id="password" name="password" type="password" autocomplete="current-password" required minlength="8" maxlength="128">
+      </label>
+      <p class="admin-status" id="status" role="status"></p>
+      <div class="admin-toolbar">
+        <button type="submit" class="primary" id="login-btn">Войти</button>
+        <button type="submit" class="ghost" id="register-btn">Зарегистрироваться</button>
+      </div>
+    </form>
+  </main>
+  <script type="module" src="/assets/login.js?v=email4"></script>
+</body>
+</html>

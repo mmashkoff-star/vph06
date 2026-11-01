@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Deluxe Auto — пользователи</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body class="admin-page">
+  <div class="stage" aria-hidden="true">
+    <div class="sky"></div>
+    <div class="photo-gt"></div>
+    <div class="vignette"></div>
+  </div>
+  <header>
+    <div class="brand">Deluxe Auto<span>Settings</span></div>
+    <p class="meta"><a href="/">На форму записи</a> · <a href="/admin.html">Услуги</a> · <span id="who"></span> · <button type="button" class="ghost" id="logout-btn">Выйти</button></p>
+  </header>
+  <main class="admin">
+    <section class="hero">
+      <p class="eyebrow">Административная панель</p>
+      <h1>Пользователи</h1>
+      <p class="lede">Смените свой пароль или добавьте ещё одного администратора. Первый вход больше не оставляет вас без этой страницы.</p>
+    </section>
+    <p class="admin-status" id="welcome" hidden>Зарегистрировали первого админа. Смените пароль, если этот вход был временным.</p>
+    <article class="admin-card login-card" id="password-card">
+      <div class="admin-card-head">
+        <strong>Мой пароль</strong>
+        <span id="me-login"></span>
+      </div>
+      <form id="password-form">
+        <label>Текущий пароль
+          <input id="current-password" type="password" autocomplete="current-password" required minlength="1">
+        </label>
+        <div class="row row-2">
+          <label>Новый пароль
+            <input id="new-password" type="password" autocomplete="new-password" required minlength="8">
+          </label>
+          <label>Ещё раз
+            <input id="new-password-2" type="password" autocomplete="new-password" required minlength="8">
+          </label>
+        </div>
+        <p class="admin-status" id="password-status" role="status"></p>
+        <button type="submit" class="primary" id="password-btn">Сменить пароль</button>
+      </form>
+    </article>
+    <article class="admin-card">
+      <div class="admin-card-head">
+        <strong>Администраторы</strong>
+        <span>таблица admins</span>
+      </div>
+      <p class="admin-status" id="users-status" role="status"></p>
+      <div id="users-list"></div>
+      <form id="add-form" class="login-card">
+        <div class="admin-card-head">
+          <strong>Новый пользователь</strong>
+        </div>
+        <div class="row row-3">
+          <label>Логин
+            <input id="add-login" required minlength="3" maxlength="64" autocomplete="off">
+          </label>
+          <label>E-mail
+            <input id="add-email" type="email" required maxlength="254" autocomplete="email">
+          </label>
+          <label>Пароль
+            <input id="add-password" type="password" required minlength="8" autocomplete="new-password">
+          </label>
+        </div>
+        <button type="submit" class="ghost" id="add-user-btn">Добавить администратора</button>
+      </form>
+    </article>
+  </main>
+  <script type="module" src="/src/users.js"></script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Deluxe Auto — админ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/style.css?v=temp2">
+</head>
+<body class="admin-page">
+  <div class="stage" aria-hidden="true">
+    <div class="sky"></div>
+    <div class="photo-gt"></div>
+    <div class="vignette"></div>
+  </div>
+  <header class="admin-top">
+    <div class="brand">Deluxe Auto<span>Atelier desk</span></div>
+    <nav class="admin-nav" aria-label="Разделы админки">
+      <button type="button" class="nav-btn is-active" data-view="leads" id="leads-btn">Очередь заявок</button>
+      <button type="button" class="nav-btn" data-view="stats" id="stats-btn">Статистика формы</button>
+      <button type="button" class="nav-btn" data-view="services" id="services-btn">Услуги и диапазон цен</button>
+    </nav>
+    <p class="meta">
+      <a href="/">На форму</a>
+      <a href="/users.html">Пользователи</a>
+      <span id="who"></span>
+      <button type="button" class="ghost" id="logout-btn">Выйти</button>
+    </p>
+  </header>
+  <main class="admin">
+    <section class="admin-view" data-panel="leads">
+      <section class="hero hero-compact">
+        <p class="eyebrow">Рабочий стол</p>
+        <h1>Очередь заявок</h1>
+        <p class="lede">Горячие заявки сверху. Откройте карточку, чтобы увидеть отдел, персонального менеджера и связаться с клиентом.</p>
+      </section>
+      <section class="admin-panel leads-panel">
+        <div class="leads-overview" id="leads-overview"></div>
+        <p class="admin-status" id="leads-status" role="status">Загружаем заявки…</p>
+        <div class="leads-table-wrap">
+          <table class="leads-table">
+            <thead>
+              <tr>
+                <th>Приоритет</th>
+                <th>Температура</th>
+                <th>Клиент</th>
+                <th>Авто и услуга</th>
+                <th>Бюджет / срок</th>
+                <th>Решение</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="leads-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <section class="admin-view" data-panel="stats" hidden>
+      <section class="hero hero-compact">
+        <p class="eyebrow">Форма записи</p>
+        <h1>Статистика формы</h1>
+        <p class="lede">Среднее и максимальное время на странице, клики и хитмап курсора.</p>
+      </section>
+      <p class="stats-note" id="stats-status">Загружаем метрики…</p>
+      <section class="stats-times" id="stats-times"></section>
+      <section class="stats-heat">
+        <div class="stats-heat-head">
+          <h3>Хитмап курсора</h3>
+          <p>Крупнее и ярче — дольше и чаще держали мышь. Координаты сведены к пропорциям окна.</p>
+        </div>
+        <canvas id="stats-heatmap" width="800" height="480"></canvas>
+        <p class="stats-clicks" id="stats-clicks"></p>
+      </section>
+    </section>
+
+    <section class="admin-view" data-panel="services" hidden>
+      <section class="hero hero-compact">
+        <p class="eyebrow">Каталог</p>
+        <h1>Услуги и диапазон цен</h1>
+        <p class="lede">Список на форме записи. У каждой услуги свой минимум, максимум и шаг бюджета.</p>
+      </section>
+      <section class="admin-panel">
+        <div class="admin-toolbar">
+          <button type="button" class="ghost" id="add-btn">Добавить услугу</button>
+          <button type="button" class="primary" id="save-btn">Сохранить</button>
+        </div>
+        <p class="admin-status" id="status" role="status"></p>
+        <div id="list"></div>
+      </section>
+    </section>
+  </main>
+  <script type="module" src="/assets/admin.js?v=temp2"></script>
+</body>
+</html>

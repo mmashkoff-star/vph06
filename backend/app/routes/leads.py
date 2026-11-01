@@ -5,6 +5,7 @@ from typing import Any
 from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel, Field
 
+from app.core.lead_insight import enrich_lead, summarize_leads
 from app.models.behavior import BehaviorCRUD
 from app.models.lead import LeadCRUD
 
@@ -71,7 +72,14 @@ def create_lead(
 
 @router.get("")
 def list_leads(limit: int = 100, offset: int = 0) -> list[dict[str, Any]]:
-    return LeadCRUD.list(limit=limit, offset=offset)
+    return [enrich_lead(row) for row in LeadCRUD.list(limit=limit, offset=offset)]
+
+
+@router.get("/queue")
+def leads_queue(limit: int = 100, offset: int = 0) -> dict[str, Any]:
+    rows = [enrich_lead(row) for row in LeadCRUD.list(limit=limit, offset=offset)]
+    rows.sort(key=lambda row: (-int(row["insight"]["score"]), int(row["id"])))
+    return {"summary": summarize_leads(rows), "leads": rows}
 
 
 @router.get("/{lead_id}")
@@ -79,7 +87,7 @@ def get_lead(lead_id: int) -> dict[str, Any]:
     lead = LeadCRUD.get(lead_id)
     if lead is None:
         raise HTTPException(status_code=404, detail="заявка не найдена")
-    return {"lead": lead, "behavior": BehaviorCRUD.get(lead_id)}
+    return {"lead": enrich_lead(lead), "behavior": BehaviorCRUD.get(lead_id)}
 
 
 @router.patch("/{lead_id}")

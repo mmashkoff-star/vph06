@@ -102,6 +102,81 @@ function money(value) {
   return new Intl.NumberFormat("ru-RU").format(Number(value)) + " ₽";
 }
 
+function sessionId() {
+  const key = "da_metrics_sid";
+  let value = sessionStorage.getItem(key);
+  if (!value) {
+    value = (crypto.randomUUID && crypto.randomUUID()) || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    sessionStorage.setItem(key, value);
+  }
+  return value;
+}
+
+function buttonName(el) {
+  if (el.dataset.service) return `service:${el.dataset.service}`;
+  if (el.id) return el.id;
+  if (el.name) return el.name;
+  const text = (el.innerText || el.getAttribute("aria-label") || el.value || "").trim().replace(/\s+/g, " ").slice(0, 60);
+  return text || el.tagName.toLowerCase();
+}
+
+function liveMetrics() {
+  const started = Date.now();
+  const clicks = {};
+  const cursor = { x: 0, y: 0, w: window.innerWidth, h: window.innerHeight, sx: 0, sy: 0 };
+  const positions = [];
+  const sid = sessionId();
+
+  document.addEventListener("pointermove", (event) => {
+    cursor.x = Math.round(event.clientX);
+    cursor.y = Math.round(event.clientY);
+    cursor.w = window.innerWidth;
+    cursor.h = window.innerHeight;
+    cursor.sx = Math.round(window.scrollX);
+    cursor.sy = Math.round(window.scrollY);
+  }, { passive: true });
+
+  document.addEventListener("click", (event) => {
+    const el = event.target.closest("button, [role=button], input[type=button], input[type=submit], a, summary");
+    if (!el) return;
+    const name = buttonName(el);
+    clicks[name] = (clicks[name] || 0) + 1;
+  });
+
+  let busy = false;
+  const send = () => {
+    if (document.visibilityState !== "visible" || busy) return;
+    positions.push([
+      cursor.x,
+      cursor.y,
+      cursor.w,
+      cursor.h,
+      cursor.sx,
+      cursor.sy,
+      Math.floor((Date.now() - started) / 1000),
+    ]);
+    if (positions.length > 1800) positions.splice(0, positions.length - 1800);
+    busy = true;
+    fetch("/api/behavior-metrics/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        application_id: 0,
+        time_on_page: Math.floor((Date.now() - started) / 1000),
+        buttons_clicked: JSON.stringify(clicks),
+        cursor_positions: JSON.stringify(positions),
+        return_frequency: 0,
+        session_id: sid,
+      }),
+      keepalive: true,
+    }).catch(() => {}).finally(() => {
+      busy = false;
+    });
+  };
+
+  window.setInterval(send, 1000);
+}
+
 function tracker() {
   const started = Date.now();
   const visitsKey = "da_returns";
@@ -145,63 +220,82 @@ function tracker() {
   return { started, metrics };
 }
 
-function fillWorkTypes(serviceTitle, workTypeSelect) {
-  const types = WORK_TYPES[serviceTitle] || [];
-  if (!serviceTitle || !types.length) {
+function workTypesOf(item) {
+  if (item?.work_types?.length) return item.work_types;
+  return WORK_TYPES[item?.title] || [];
+}
+
+function applyBudgetRange(item, fallback, budget, budgetLabel) {
+  const min = Number(item?.budget_min || fallback.budget_min || 200000);
+  const max = Number(item?.budget_max || fallback.budget_max || 6000000);
+  const step = Number(item?.budget_step || fallback.budget_step || 50000);
+  budget.min = min;
+  budget.max = max;
+  budget.step = step;
+  const mid = Math.round((min + max) / 2 / step) * step;
+  budget.value = Math.min(max, Math.max(min, mid));
+  budgetLabel.textContent = money(budget.value);
+}
+
+function fillWorkTypes(item, workTypeSelect) {
+  const types = workTypesOf(item);
+  if (!item || !types.length) {
     workTypeSelect.innerHTML = '<option value="">Сначала выберите услугу</option>';
     workTypeSelect.disabled = true;
     workTypeSelect.value = "";
     return;
   }
   workTypeSelect.disabled = false;
-  workTypeSelect.innerHTML = '<option value="">Выберите тип работ</option>' + types.map((item) => (
-    `<option value="${esc(item)}">${esc(item)}</option>`
+  workTypeSelect.innerHTML = '<option value="">Выберите тип работ</option>' + types.map((value) => (
+    `<option value="${esc(value)}">${esc(value)}</option>`
   )).join("");
 }
 
-function syncService(title, serviceSelect, box, workTypeSelect) {
+function syncService(title, services, fallback, serviceSelect, box, workTypeSelect, budget, budgetLabel) {
+  const item = services.find((row) => (row.title || row.key) === title);
   serviceSelect.value = title;
   box.querySelectorAll(".svc").forEach((node) => {
     node.classList.toggle("is-active", node.dataset.service === title);
   });
-  fillWorkTypes(title, workTypeSelect);
+  fillWorkTypes(item, workTypeSelect);
+  applyBudgetRange(item || fallback, fallback, budget, budgetLabel);
 }
 
-function renderServices(items, serviceSelect, box, workTypeSelect) {
+function renderServices(items, fallback, serviceSelect, box, workTypeSelect, budget, budgetLabel) {
   box.innerHTML = items.map((item) => {
     const title = item.title || item.key || "";
+    const range = `${money(item.budget_min || fallback.budget_min)} — ${money(item.budget_max || fallback.budget_max)}`;
     return `<button type="button" class="svc" data-service="${esc(title)}">
       <h3>${esc(title)}</h3>
       <p>${esc(item.description || "")}</p>
+      <small>${esc(range)}</small>
     </button>`;
   }).join("");
   serviceSelect.innerHTML = '<option value="">Выберите услугу</option>' + items.map((item) => {
     const title = item.title || item.key || "";
     return `<option value="${esc(title)}">${esc(title)}</option>`;
   }).join("");
-  fillWorkTypes("", workTypeSelect);
+  fillWorkTypes(null, workTypeSelect);
+  applyBudgetRange(fallback, fallback, budget, budgetLabel);
   box.querySelectorAll(".svc").forEach((card) => {
     card.addEventListener("click", () => {
-      syncService(card.dataset.service || "", serviceSelect, box, workTypeSelect);
+      syncService(card.dataset.service || "", items, fallback, serviceSelect, box, workTypeSelect, budget, budgetLabel);
     });
   });
   serviceSelect.addEventListener("change", () => {
-    syncService(serviceSelect.value, serviceSelect, box, workTypeSelect);
+    syncService(serviceSelect.value, items, fallback, serviceSelect, box, workTypeSelect, budget, budgetLabel);
   });
 }
 
 async function loadAdmin(budget, budgetLabel, serviceSelect, servicesBox, workTypeSelect) {
   const apply = (data) => {
-    const min = Number(data.budget_min || 200000);
-    const max = Number(data.budget_max || 6000000);
-    const step = Number(data.budget_step || 50000);
-    budget.min = min;
-    budget.max = max;
-    budget.step = step;
-    budget.value = Math.round((min + max) / 2 / step) * step;
-    budgetLabel.textContent = money(budget.value);
+    const fallback = {
+      budget_min: data.budget_min || "200000",
+      budget_max: data.budget_max || "6000000",
+      budget_step: data.budget_step || "50000",
+    };
     const services = data.services && data.services.length ? data.services : FALLBACK_SERVICES;
-    renderServices(services, serviceSelect, servicesBox, workTypeSelect);
+    renderServices(services, fallback, serviceSelect, servicesBox, workTypeSelect, budget, budgetLabel);
   };
   try {
     const res = await fetch("/api/admin");
@@ -214,6 +308,7 @@ async function loadAdmin(budget, budgetLabel, serviceSelect, servicesBox, workTy
 
 function boot() {
   startScene(document.getElementById("scene"));
+  liveMetrics();
   const { started, metrics } = tracker();
   const form = document.getElementById("lead-form");
   const budget = document.getElementById("budget");
@@ -226,7 +321,7 @@ function boot() {
   budget.addEventListener("input", () => {
     budgetLabel.textContent = money(budget.value);
   });
-  fillWorkTypes("", workTypeSelect);
+  fillWorkTypes(null, workTypeSelect);
   loadAdmin(budget, budgetLabel, serviceSelect, servicesBox, workTypeSelect);
 
   form.addEventListener("submit", async (event) => {
